@@ -1,0 +1,35 @@
+type Product {
+  id: ID!
+  name: String!
+  price: Float!
+}
+
+input ProductInput {
+  name: String!
+  price: Float!
+}
+
+input UpdateProductInput {
+  id: ID!
+  name: String!
+  price: Float!
+}
+
+type Query {
+  getProducts: [Product!]!
+  getProductById(productId: String!): Product
+}
+
+type Mutation {
+  createProduct(product: ProductInput!): Product!
+  updateProduct(product: UpdateProductInput!): Product!
+  deleteProduct(productId: String!): String!
+}
+
+type Subscription {
+  onCreateProduct: Product @aws_subscribe(mutations: ["createProduct"])
+  onDeleteProduct: String @aws_subscribe(mutations: ["deleteProduct"])
+  onUpdateProduct: Product @aws_subscribe(mutations: ["updateProduct"])
+  onUpdateProductPrice(price: Float): Product
+    @aws_subscribe(mutations: ["updateProduct"])
+}
