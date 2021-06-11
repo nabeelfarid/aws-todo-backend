@@ -4,7 +4,7 @@ import { title } from "process";
 import Todo from "./Todo";
 var docClient = new AWS.DynamoDB.DocumentClient();
 
-const createTodo = async (title: string) => {
+const createTodo = async (title: string, username: string) => {
   const todo: Todo = {
     id: crypto.randomBytes(16).toString("hex"),
     title: title,
@@ -14,7 +14,7 @@ const createTodo = async (title: string) => {
     await docClient
       .put({
         TableName: process.env.TODOS_TABLE as string,
-        Item: todo,
+        Item: { ...todo, username: username, created: Date.now() },
       })
       .promise();
     console.log("New Product created:", JSON.stringify(todo, null, 4));

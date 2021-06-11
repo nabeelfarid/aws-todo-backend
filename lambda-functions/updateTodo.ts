@@ -4,11 +4,12 @@ import Todo from "./Todo";
 var docClient = new AWS.DynamoDB.DocumentClient();
 // https://stackoverflow.com/a/65572954/288746
 
-const updateTodo = async (id: string, done: boolean) => {
+const updateTodo = async (id: string, done: boolean, username: string) => {
   const params: DocumentClient.UpdateItemInput = {
     TableName: process.env.TODOS_TABLE as string,
     Key: {
       id: id,
+      username: username,
     },
     // set parameter for each column
     UpdateExpression: "set done = :done",

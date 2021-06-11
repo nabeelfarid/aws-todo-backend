@@ -2,12 +2,12 @@ import * as AWS from "aws-sdk";
 import Todo from "./Todo";
 var docClient = new AWS.DynamoDB.DocumentClient();
 
-const deleteTodo = async (todoId: string) => {
+const deleteTodo = async (todoId: string, username: string) => {
   try {
     var deletedTodo = await docClient
       .delete({
         TableName: process.env.TODOS_TABLE as string,
-        Key: { id: todoId },
+        Key: { id: todoId, username: username },
         ReturnValues: "ALL_OLD",
       })
       .promise();

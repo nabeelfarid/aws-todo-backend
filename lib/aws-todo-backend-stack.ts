@@ -10,6 +10,7 @@ export class AwsTodoBackendStack extends cdk.Stack {
 
     const userPool = new cognito.UserPool(this, `${id}_userpool`, {
       userPoolName: `${id}_userpool`,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
       selfSignUpEnabled: true, // Allow users to sign up
       autoVerify: { email: true },
       //If you mark an attribute as an alias, users can sign in using that attribute in place of the username.
@@ -53,7 +54,6 @@ export class AwsTodoBackendStack extends cdk.Stack {
     const lambdaTodos = new lambda.Function(
       this,
       `${id}_lambda_for_appsync_graphql_api`,
-
       {
         functionName: `${id}_lambda_for_appsync_graphql_api`,
         runtime: lambda.Runtime.NODEJS_14_X,
@@ -87,14 +87,31 @@ export class AwsTodoBackendStack extends cdk.Stack {
 
     const ddbTableTodos = new ddb.Table(this, `${id}_dynamoDb_table`, {
       tableName: "Todos",
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      billingMode: ddb.BillingMode.PAY_PER_REQUEST,
       partitionKey: {
+        name: "username",
+        type: ddb.AttributeType.STRING,
+      },
+      sortKey: {
         name: "id",
         type: ddb.AttributeType.STRING,
       },
     });
 
+    const indexName = "Todos_Index_Local_Created";
+    ddbTableTodos.addLocalSecondaryIndex({
+      indexName: indexName,
+      sortKey: {
+        name: "created",
+        type: ddb.AttributeType.NUMBER,
+      },
+      projectionType: ddb.ProjectionType.ALL,
+    });
+
     ddbTableTodos.grantFullAccess(lambdaTodos);
 
     lambdaTodos.addEnvironment("TODOS_TABLE", ddbTableTodos.tableName);
+    lambdaTodos.addEnvironment("TODOS_TABLE_LOCAL_INDEX_CREATED", indexName);
   }
 }

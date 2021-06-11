@@ -1,15 +1,26 @@
 import * as AWS from "aws-sdk";
+import { DocumentClient } from "aws-sdk/clients/dynamodb";
 var docClient = new AWS.DynamoDB.DocumentClient();
 // https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/dynamodb-example-document-client.html
 
-const getTodos = async () => {
+const getTodos = async (username: string) => {
   try {
-    const data = await docClient
-      .scan({
-        TableName: process.env.TODOS_TABLE as string,
-      })
-      .promise();
-    console.log("getTodos scan:", data);
+    var params: DocumentClient.QueryInput = {
+      TableName: process.env.TODOS_TABLE as string,
+      IndexName: process.env.TODOS_TABLE_LOCAL_INDEX_CREATED,
+      KeyConditionExpression: "#username = :username",
+      ExpressionAttributeNames: {
+        "#username": "username",
+      },
+      ExpressionAttributeValues: {
+        ":username": username,
+      },
+      // sort result in descending order based on sort key i.e. created
+      ScanIndexForward: false,
+    };
+
+    const data = await docClient.query(params).promise();
+    console.log("getTodos query:", data);
     return data.Items;
   } catch (error) {
     console.log("Dynamo DB Error", error);
