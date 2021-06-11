@@ -30,7 +30,7 @@ export class AwsTodoBackendPipelineStack extends cdk.Stack {
       sourceAction: new CodePipelineAction.GitHubSourceAction({
         actionName: "Checkout",
         owner: "nabeelfarid",
-        repo: "AwsPipelineDemo-BackendCode",
+        repo: "aws-todo-backend",
         oauthToken: cdk.SecretValue.secretsManager("GITHUB_TOKEN_FOR_AWS"), ///create token on github and save it on aws secret manager
         branch: "master", ///Branch of your repo
         output: sourceArtifact, // Indicates where the artifact is stored
