@@ -11,17 +11,27 @@ export class AwsTodoBackendStack extends cdk.Stack {
     const userPool = new cognito.UserPool(this, `${id}_userpool`, {
       userPoolName: `${id}_userpool`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      selfSignUpEnabled: true, // Allow users to sign up
+      selfSignUpEnabled: true,
       autoVerify: { email: true },
-      //If you mark an attribute as an alias, users can sign in using that attribute in place of the username.
-      signInAliases: { email: true }, // Set email as an alias
+      signInCaseSensitive: true,
+      // signInAliases: { email: true },
       userVerification: {
         emailSubject: "Todo App: Verify your email",
         // emailBody: 'Hello {username}, Thanks for signing up to our awesome app! Your verification code is {####}',
         emailStyle: cognito.VerificationEmailStyle.CODE,
         // smsMessage: 'Hello {username}, Thanks for signing up to our awesome app! Your verification code is {####}',
-      }, ///customize email and sms
-      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY, ///Account Recovery email
+      },
+      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+      standardAttributes: {
+        email: {
+          required: true,
+          mutable: false,
+        },
+        fullname: {
+          required: true,
+          mutable: true,
+        },
+      },
     });
 
     const userPoolClient = new cognito.UserPoolClient(
