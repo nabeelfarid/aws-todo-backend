@@ -1,10 +1,9 @@
 import * as AWS from "aws-sdk";
 import * as crypto from "crypto";
-import { title } from "process";
 import Todo from "./Todo";
 var docClient = new AWS.DynamoDB.DocumentClient();
 
-const createTodo = async (title: string, username: string) => {
+const createTodo = async (title: string, username: string): Promise<Todo> => {
   const todo: Todo = {
     id: crypto.randomBytes(16).toString("hex"),
     title: title,

@@ -1,5 +1,3 @@
-import Todo from "./Todo";
-
 type AppSyncEvent = {
   info: {
     fieldName: string;

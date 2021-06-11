@@ -4,7 +4,11 @@ import Todo from "./Todo";
 var docClient = new AWS.DynamoDB.DocumentClient();
 // https://stackoverflow.com/a/65572954/288746
 
-const updateTodo = async (id: string, done: boolean, username: string) => {
+const updateTodo = async (
+  id: string,
+  done: boolean,
+  username: string
+): Promise<Todo | null> => {
   const params: DocumentClient.UpdateItemInput = {
     TableName: process.env.TODOS_TABLE as string,
     Key: {
@@ -26,7 +30,7 @@ const updateTodo = async (id: string, done: boolean, username: string) => {
     const updatedTodo = await docClient.update(params).promise();
 
     console.log("Todo updated:", JSON.stringify(updatedTodo, null, 4));
-    return updatedTodo.Attributes;
+    return updatedTodo.Attributes as Todo | null;
   } catch (error) {
     console.log("DynamoDB error: ", error);
     throw error;

@@ -1,9 +1,10 @@
 import * as AWS from "aws-sdk";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import Todo from "./Todo";
 var docClient = new AWS.DynamoDB.DocumentClient();
 // https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/dynamodb-example-document-client.html
 
-const getTodos = async (username: string) => {
+const getTodos = async (username: string): Promise<Todo[]> => {
   try {
     var params: DocumentClient.QueryInput = {
       TableName: process.env.TODOS_TABLE as string,
@@ -21,7 +22,7 @@ const getTodos = async (username: string) => {
 
     const data = await docClient.query(params).promise();
     console.log("getTodos query:", data);
-    return data.Items;
+    return data.Items as Todo[];
   } catch (error) {
     console.log("Dynamo DB Error", error);
     throw error;
