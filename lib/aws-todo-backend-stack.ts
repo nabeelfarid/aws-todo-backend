@@ -123,5 +123,17 @@ export class AwsTodoBackendStack extends cdk.Stack {
 
     lambdaTodos.addEnvironment("TODOS_TABLE", ddbTableTodos.tableName);
     lambdaTodos.addEnvironment("TODOS_TABLE_LOCAL_INDEX_CREATED", indexName);
+
+    new cdk.CfnOutput(this, "AppSyncGraphqlUrl", {
+      value: appsyncApi.graphqlUrl,
+    });
+
+    new cdk.CfnOutput(this, "UserPoolId", {
+      value: userPool.userPoolId,
+    });
+
+    new cdk.CfnOutput(this, "UserPoolClient", {
+      value: userPoolClient.userPoolClientId,
+    });
   }
 }
