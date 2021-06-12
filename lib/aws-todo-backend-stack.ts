@@ -43,6 +43,8 @@ export class AwsTodoBackendStack extends cdk.Stack {
       }
     );
 
+    userPoolClient.node.addDependency(userPool);
+
     const appsyncApi = new appsync.GraphqlApi(
       this,
       `${id}_appsync_graphql_api`,
@@ -61,39 +63,7 @@ export class AwsTodoBackendStack extends cdk.Stack {
       }
     );
 
-    const lambdaTodos = new lambda.Function(
-      this,
-      `${id}_lambda_for_appsync_graphql_api`,
-      {
-        functionName: `${id}_lambda_for_appsync_graphql_api`,
-        runtime: lambda.Runtime.NODEJS_14_X,
-        code: lambda.Code.fromAsset("lambda-functions"),
-        handler: "main.handler",
-      }
-    );
-
-    const lambdaTodosDataSource = appsyncApi.addLambdaDataSource(
-      `${id}_lambda_datasource_for_appsync_graphql_api`,
-      lambdaTodos
-    );
-
-    lambdaTodosDataSource.createResolver({
-      fieldName: "getTodos",
-      typeName: "Query",
-    });
-
-    lambdaTodosDataSource.createResolver({
-      fieldName: "createTodo",
-      typeName: "Mutation",
-    });
-    lambdaTodosDataSource.createResolver({
-      fieldName: "updateTodoDoneStatus",
-      typeName: "Mutation",
-    });
-    lambdaTodosDataSource.createResolver({
-      fieldName: "deleteTodo",
-      typeName: "Mutation",
-    });
+    appsyncApi.node.addDependency(userPool);
 
     const ddbTableTodos = new ddb.Table(this, `${id}_dynamoDb_table`, {
       tableName: `${id}_Todos`,
@@ -119,29 +89,75 @@ export class AwsTodoBackendStack extends cdk.Stack {
       projectionType: ddb.ProjectionType.ALL,
     });
 
+    const lambdaTodos = new lambda.Function(
+      this,
+      `${id}_lambda_for_appsync_graphql_api`,
+      {
+        functionName: `${id}_lambda_for_appsync_graphql_api`,
+        runtime: lambda.Runtime.NODEJS_14_X,
+        code: lambda.Code.fromAsset("lambda-functions"),
+        handler: "main.handler",
+        environment: {
+          TODOS_TABLE: ddbTableTodos.tableName,
+          TODOS_TABLE_LOCAL_INDEX_CREATED: indexName,
+        },
+      }
+    );
+
+    lambdaTodos.node.addDependency(ddbTableTodos);
+
     ddbTableTodos.grantFullAccess(lambdaTodos);
 
-    lambdaTodos.addEnvironment("TODOS_TABLE", ddbTableTodos.tableName);
-    lambdaTodos.addEnvironment("TODOS_TABLE_LOCAL_INDEX_CREATED", indexName);
+    const lambdaTodosDataSource = appsyncApi.addLambdaDataSource(
+      `${id}_lambda_datasource_for_appsync_graphql_api`,
+      lambdaTodos
+    );
 
-    new cdk.CfnOutput(this, "AppSyncUrl", {
+    lambdaTodosDataSource.createResolver({
+      fieldName: "getTodos",
+      typeName: "Query",
+    });
+
+    lambdaTodosDataSource.createResolver({
+      fieldName: "createTodo",
+      typeName: "Mutation",
+    });
+    lambdaTodosDataSource.createResolver({
+      fieldName: "updateTodoDoneStatus",
+      typeName: "Mutation",
+    });
+    lambdaTodosDataSource.createResolver({
+      fieldName: "deleteTodo",
+      typeName: "Mutation",
+    });
+
+    const outputAppsyncUrl = new cdk.CfnOutput(this, "AppSyncUrl", {
       value: appsyncApi.graphqlUrl,
     });
 
-    new cdk.CfnOutput(this, "UserPoolId", {
+    outputAppsyncUrl.node.addDependency(appsyncApi);
+
+    const outputUserPoolId = new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
 
-    new cdk.CfnOutput(this, "UserPoolClient", {
+    outputUserPoolId.node.addDependency(userPool);
+
+    const outputUserPoolClient = new cdk.CfnOutput(this, "UserPoolClient", {
       value: userPoolClient.userPoolClientId,
     });
 
-    new cdk.CfnOutput(this, "Table", {
+    outputUserPoolClient.node.addDependency(userPoolClient);
+
+    const outputTable = new cdk.CfnOutput(this, "Table", {
       value: ddbTableTodos.tableName,
     });
 
-    new cdk.CfnOutput(this, "LocalSecondaryIndex", {
+    const outputIndex = new cdk.CfnOutput(this, "LocalSecondaryIndex", {
       value: indexName,
     });
+
+    outputTable.node.addDependency(ddbTableTodos);
+    outputIndex.node.addDependency(ddbTableTodos);
   }
 }
