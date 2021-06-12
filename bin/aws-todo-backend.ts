@@ -2,9 +2,10 @@
 import "source-map-support/register";
 import * as cdk from "@aws-cdk/core";
 import { AwsTodoBackendPipelineStack } from "../lib/aws-todo-backend-pipeline-stack";
+import { AwsTodoBackendStack } from "../lib/aws-todo-backend-stack";
 
 const app = new cdk.App();
-new AwsTodoBackendPipelineStack(app, "AwsTodoBackendPipelineStack", {
+new AwsTodoBackendPipelineStack(app, "TodoAppBackendPipelineStack", {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */

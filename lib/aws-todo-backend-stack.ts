@@ -43,8 +43,6 @@ export class AwsTodoBackendStack extends cdk.Stack {
       }
     );
 
-    userPoolClient.node.addDependency(userPool);
-
     const appsyncApi = new appsync.GraphqlApi(
       this,
       `${id}_appsync_graphql_api`,
@@ -63,32 +61,6 @@ export class AwsTodoBackendStack extends cdk.Stack {
       }
     );
 
-    appsyncApi.node.addDependency(userPool);
-
-    const ddbTableTodos = new ddb.Table(this, `${id}_dynamoDb_table`, {
-      tableName: `${id}_Todos`,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      billingMode: ddb.BillingMode.PAY_PER_REQUEST,
-      partitionKey: {
-        name: "username",
-        type: ddb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: "id",
-        type: ddb.AttributeType.STRING,
-      },
-    });
-
-    const indexName = `${ddbTableTodos.tableName}_Index_Local_Created`;
-    ddbTableTodos.addLocalSecondaryIndex({
-      indexName: indexName,
-      sortKey: {
-        name: "created",
-        type: ddb.AttributeType.NUMBER,
-      },
-      projectionType: ddb.ProjectionType.ALL,
-    });
-
     const lambdaTodos = new lambda.Function(
       this,
       `${id}_lambda_for_appsync_graphql_api`,
@@ -97,16 +69,8 @@ export class AwsTodoBackendStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_14_X,
         code: lambda.Code.fromAsset("lambda-functions"),
         handler: "main.handler",
-        environment: {
-          TODOS_TABLE: ddbTableTodos.tableName,
-          TODOS_TABLE_LOCAL_INDEX_CREATED: indexName,
-        },
       }
     );
-
-    lambdaTodos.node.addDependency(ddbTableTodos);
-
-    ddbTableTodos.grantFullAccess(lambdaTodos);
 
     const lambdaTodosDataSource = appsyncApi.addLambdaDataSource(
       `${id}_lambda_datasource_for_appsync_graphql_api`,
@@ -131,23 +95,46 @@ export class AwsTodoBackendStack extends cdk.Stack {
       typeName: "Mutation",
     });
 
+    const ddbTableTodos = new ddb.Table(this, `${id}_dynamoDb_table`, {
+      tableName: `${id}_Todos`,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      billingMode: ddb.BillingMode.PAY_PER_REQUEST,
+      partitionKey: {
+        name: "username",
+        type: ddb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: "id",
+        type: ddb.AttributeType.STRING,
+      },
+    });
+
+    const indexName = `${id}_Todos_Index_Local_Created`;
+    ddbTableTodos.addLocalSecondaryIndex({
+      indexName: indexName,
+      sortKey: {
+        name: "created",
+        type: ddb.AttributeType.NUMBER,
+      },
+      projectionType: ddb.ProjectionType.ALL,
+    });
+
+    ddbTableTodos.grantFullAccess(lambdaTodos);
+
+    lambdaTodos.addEnvironment("TODOS_TABLE", ddbTableTodos.tableName);
+    lambdaTodos.addEnvironment("TODOS_TABLE_LOCAL_INDEX_CREATED", indexName);
+
     const outputAppsyncUrl = new cdk.CfnOutput(this, "AppSyncUrl", {
       value: appsyncApi.graphqlUrl,
     });
-
-    outputAppsyncUrl.node.addDependency(appsyncApi);
 
     const outputUserPoolId = new cdk.CfnOutput(this, "UserPoolId", {
       value: userPool.userPoolId,
     });
 
-    outputUserPoolId.node.addDependency(userPool);
-
     const outputUserPoolClient = new cdk.CfnOutput(this, "UserPoolClient", {
       value: userPoolClient.userPoolClientId,
     });
-
-    outputUserPoolClient.node.addDependency(userPoolClient);
 
     const outputTable = new cdk.CfnOutput(this, "Table", {
       value: ddbTableTodos.tableName,
@@ -156,8 +143,5 @@ export class AwsTodoBackendStack extends cdk.Stack {
     const outputIndex = new cdk.CfnOutput(this, "LocalSecondaryIndex", {
       value: indexName,
     });
-
-    outputTable.node.addDependency(ddbTableTodos);
-    outputIndex.node.addDependency(ddbTableTodos);
   }
 }
