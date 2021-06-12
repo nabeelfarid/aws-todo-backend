@@ -142,6 +142,7 @@ export class AwsTodoBackendStack extends cdk.Stack {
 
     const outputIndex = new cdk.CfnOutput(this, "LocalSecondaryIndex", {
       value: indexName,
+      description: "Local secondary index",
     });
   }
 }
