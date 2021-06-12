@@ -96,7 +96,7 @@ export class AwsTodoBackendStack extends cdk.Stack {
     });
 
     const ddbTableTodos = new ddb.Table(this, `${id}_dynamoDb_table`, {
-      tableName: "Todos",
+      tableName: `${id}_Todos`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       billingMode: ddb.BillingMode.PAY_PER_REQUEST,
       partitionKey: {
@@ -109,7 +109,7 @@ export class AwsTodoBackendStack extends cdk.Stack {
       },
     });
 
-    const indexName = "Todos_Index_Local_Created";
+    const indexName = `${ddbTableTodos.tableName}_Index_Local_Created`;
     ddbTableTodos.addLocalSecondaryIndex({
       indexName: indexName,
       sortKey: {
@@ -124,7 +124,7 @@ export class AwsTodoBackendStack extends cdk.Stack {
     lambdaTodos.addEnvironment("TODOS_TABLE", ddbTableTodos.tableName);
     lambdaTodos.addEnvironment("TODOS_TABLE_LOCAL_INDEX_CREATED", indexName);
 
-    new cdk.CfnOutput(this, "AppSyncGraphqlUrl", {
+    new cdk.CfnOutput(this, "AppSyncUrl", {
       value: appsyncApi.graphqlUrl,
     });
 
@@ -134,6 +134,14 @@ export class AwsTodoBackendStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, "UserPoolClient", {
       value: userPoolClient.userPoolClientId,
+    });
+
+    new cdk.CfnOutput(this, "Table", {
+      value: ddbTableTodos.tableName,
+    });
+
+    new cdk.CfnOutput(this, "LocalSecondaryIndex", {
+      value: indexName,
     });
   }
 }
