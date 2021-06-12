@@ -44,8 +44,8 @@ export class AwsTodoBackendPipelineStack extends cdk.Stack {
       }),
     });
 
-    pipeline.addApplicationStage(
-      new AwsTodoBackendPipelineStage(this, "Deploy")
-    );
+    // pipeline.addApplicationStage(
+    //   new AwsTodoBackendPipelineStage(this, "Deploy")
+    // );
   }
 }
